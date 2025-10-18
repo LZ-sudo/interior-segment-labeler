@@ -1,0 +1,6 @@
+/test_images
+/__pycache__
+/results
+/models/sam_vit_b_01ec64.pth
+/models/__pycache__
+/myenv
