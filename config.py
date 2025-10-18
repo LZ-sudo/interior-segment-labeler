@@ -12,7 +12,7 @@ VOCABULARY = [
     'table', 'desk', 'coffee table', 'dining table', 'side table',
     
     # Storage
-    'cabinet', 'shelf', 'bookshelf', 'drawer', 'closet', 'wardrobe',
+    'cabinet', 'shelf', 'bookshelf', 'drawer', 'closet', 'wardrobe', 'shoe drawer',
     
     # Bedroom
     'bed', 'nightstand', 'dresser', 'mirror',
@@ -21,7 +21,7 @@ VOCABULARY = [
     'lamp', 'ceiling light', 'chandelier',
     
     # Decor
-    'plant', 'picture', 'painting', 'vase', 'curtain', 'rug', 'carpet',
+    'plant', 'picture', 'painting', 'vase', 'curtain', 'rug', 'carpet', 'soft toy',
     
     # Electronics
     'tv', 'television', 'monitor', 'computer', 'standing fan',
@@ -33,7 +33,7 @@ VOCABULARY = [
     'toilet', 'bathtub', 'shower',
     
     # Other
-    'door', 'window', 'pillow', 'cushion'
+    'door', 'window', 'wall', 'pillow', 'cushion', 'dustbin'
 ]
 
 # Model settings - using lightest model (vit_b)
