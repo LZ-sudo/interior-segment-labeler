@@ -3,7 +3,7 @@ Simple Configuration
 Basic vocabulary and settings for interior detection.
 """
 
-# Interior vocabulary - common furniture and objects  
+# Interior vocabulary - common furniture and objects (used in absence of prompts) 
 VOCABULARY = [
     # Seating
     'sofa', 'couch', 'chair', 'armchair', 'bench', 'stool',
@@ -49,5 +49,7 @@ MODEL_CONFIG = {
 VIZ_CONFIG = {
     'box_thickness': 2,
     'font_scale': 0.5,
-    'show_confidence': True
+    'show_confidence': True,
+    'mask_opacity': 0.4,  # Transparency of segmentation masks (0-1)
+    'show_masks': True     # Toggle mask visualization
 }

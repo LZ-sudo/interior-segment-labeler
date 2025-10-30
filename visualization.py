@@ -11,11 +11,11 @@ import config
 
 def draw_boxes(image, detections):
     """
-    Draw bounding boxes on image.
+    Draw segmentation masks and bounding boxes on image.
     
     Args:
         image: RGB image (numpy array)
-        detections: List of detection dicts with 'bbox', 'label', 'confidence'
+        detections: List of detection dicts with 'bbox', 'label', 'confidence', and optionally 'mask'
         
     Returns:
         Annotated image
@@ -31,7 +31,11 @@ def draw_boxes(image, detections):
         color = _hsv_to_rgb(hue, 0.8, 0.9)
         colors[label] = color
     
-    # Draw each detection
+    # Draw masks first (so boxes appear on top)
+    if config.VIZ_CONFIG.get('show_masks', True):
+        img = _draw_masks(img, detections, colors)
+    
+    # Draw bounding boxes and labels
     for det in detections:
         x1, y1, x2, y2 = [int(v) for v in det['bbox']]
         label = det['label']
@@ -62,6 +66,36 @@ def draw_boxes(image, detections):
                    (255, 255, 255), 1)
     
     return img
+
+
+def _draw_masks(image, detections, colors):
+    """
+    Draw semi-transparent segmentation masks on image.
+    
+    Args:
+        image: RGB image (numpy array)
+        detections: List of detections with 'mask' field
+        colors: Dict mapping labels to RGB colors
+        
+    Returns:
+        Image with masks overlaid
+    """
+    # Create overlay for all masks
+    overlay = image.copy()
+    
+    for det in detections:
+        if 'mask' not in det:
+            continue
+            
+        mask = det['mask']  # Binary mask (H, W)
+        label = det['label']
+        color = colors[label]
+        
+        # Apply color to masked regions
+        overlay[mask] = overlay[mask] * (1 - config.VIZ_CONFIG['mask_opacity']) + \
+                        np.array(color) * config.VIZ_CONFIG['mask_opacity']
+    
+    return overlay.astype(np.uint8)
 
 
 def create_comparison(original, annotated, save_path=None):

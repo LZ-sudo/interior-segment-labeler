@@ -14,7 +14,8 @@ from pathlib import Path
 from models.model import InteriorDetector
 from visualization import draw_boxes, create_comparison
 from export_coco import export_coco
-from utils import load_image, save_image
+from utils import load_image, save_image, load_prompts
+import config
 
 
 def process_image(image_path, detector, output_dir='results'):
@@ -36,8 +37,15 @@ def process_image(image_path, detector, output_dir='results'):
         # 1. Load image
         image = load_image(image_path)
         
-        # 2. Detect objects
-        detections = detector.detect(image_path)
+        # 2. Check for custom prompts
+        custom_prompts = load_prompts(image_path)
+        
+        # 3. Detect objects (with custom prompts if available)
+        if custom_prompts:
+            detections = detector.detect(image_path, vocabulary=custom_prompts)
+        else:
+            print(f"  → Using default vocabulary ({len(config.VOCABULARY)} items)")
+            detections = detector.detect(image_path)
         
         if not detections:
             print(f"  ⚠ No objects detected in {image_path.name}")
@@ -45,7 +53,7 @@ def process_image(image_path, detector, output_dir='results'):
         
         print(f"  ✓ Found {len(detections)} objects")
         
-        # 3. Create visualization
+        # 4. Create visualization
         annotated = draw_boxes(image, detections)
         
         # Save annotated image
@@ -56,7 +64,7 @@ def process_image(image_path, detector, output_dir='results'):
         comparison_path = output_dir / f"{image_path.stem}_comparison.jpg"
         create_comparison(image, annotated, comparison_path)
         
-        # 4. Export COCO
+        # 5. Export COCO
         coco_path = output_dir / f"{image_path.stem}_coco.json"
         export_coco(detections, image_path, image.shape[:2], coco_path)
         
@@ -64,6 +72,8 @@ def process_image(image_path, detector, output_dir='results'):
         
     except Exception as e:
         print(f"  ✗ Error processing {image_path.name}: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 

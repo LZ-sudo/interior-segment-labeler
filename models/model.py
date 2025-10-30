@@ -56,33 +56,71 @@ class InteriorDetector:
     
     def detect(self, image_path, vocabulary=None):
         """
-        Detect objects in image.
-
+        Detect objects in image and generate segmentation masks.
+        
         Args:
             image_path: Path to image
             vocabulary: List of objects to detect (uses default if None)
-
+            
         Returns:
-            List of detections with bounding boxes and labels
+            List of detections with bounding boxes, labels, and segmentation masks
         """
         if vocabulary is None:
             vocabulary = config.VOCABULARY
-
+        
         # Load image
         image_pil = Image.open(image_path).convert("RGB")
         image_np = np.array(image_pil)
-
+        
         print(f"Detecting: {len(vocabulary)} object types...")
-
+        
         # Use OWL-ViT v2 if available, otherwise use dummy detections
         if self.owl_model is not None:
             detections = self._detect_with_owlvit(image_pil, vocabulary)
         else:
             print("Warning: Using dummy detections (OWL-ViT v2 not loaded)")
             detections = self._dummy_detect(image_np, vocabulary)
-
+        
         print(f"Found: {len(detections)} objects")
+        
+        # Generate SAM masks for each detection
+        if detections:
+            print(f"Generating segmentation masks...")
+            detections = self._generate_sam_masks(image_np, detections)
+        
+        return detections
 
+    def _generate_sam_masks(self, image, detections):
+        """
+        Generate SAM segmentation masks for detected objects.
+        
+        Args:
+            image: RGB image (numpy array)
+            detections: List of detections with bounding boxes
+            
+        Returns:
+            Detections with added 'mask' field
+        """
+        # Set image for SAM
+        self.sam_predictor.set_image(image)
+        
+        # Generate mask for each detection
+        for det in detections:
+            bbox = det['bbox']
+            
+            # Convert [x1, y1, x2, y2] to SAM format [x1, y1, x2, y2]
+            input_box = np.array(bbox)
+            
+            # Predict mask
+            masks, scores, logits = self.sam_predictor.predict(
+                box=input_box,
+                multimask_output=False  # Single mask per box
+            )
+            
+            # Add mask to detection (take first mask since multimask_output=False)
+            det['mask'] = masks[0]  # Binary mask (H, W)
+        
+        print(f"✓ Generated {len(detections)} segmentation masks")
         return detections
 
     def _detect_with_owlvit(self, image_pil, vocabulary):
@@ -130,21 +168,21 @@ class InteriorDetector:
 
         return detections
     
-    def _dummy_detect(self, image, vocabulary):
-        """Dummy detection for testing - replace with real GroundingDINO."""
-        # This is just for testing the pipeline
-        # Real implementation uses GroundingDINO
-        h, w = image.shape[:2]
+    # def _dummy_detect(self, image, vocabulary):
+    #     """Dummy detection for testing - replace with real GroundingDINO."""
+    #     # This is just for testing the pipeline
+    #     # Real implementation uses GroundingDINO
+    #     h, w = image.shape[:2]
         
-        return [
-            {
-                'bbox': [w//4, h//4, w//2, h//2],
-                'label': 'sofa',
-                'confidence': 0.85
-            },
-            {
-                'bbox': [w//2, h//3, 3*w//4, 2*h//3],
-                'label': 'table',
-                'confidence': 0.75
-            }
-        ]
+    #     return [
+    #         {
+    #             'bbox': [w//4, h//4, w//2, h//2],
+    #             'label': 'sofa',
+    #             'confidence': 0.85
+    #         },
+    #         {
+    #             'bbox': [w//2, h//3, 3*w//4, 2*h//3],
+    #             'label': 'table',
+    #             'confidence': 0.75
+    #         }
+    #     ]
