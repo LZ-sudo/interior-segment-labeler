@@ -9,3 +9,5 @@ transformers>=4.35.0
 supervision>=0.16.0
 scikit-learn
 roboflow
+einops 
+timm  

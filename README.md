@@ -4,7 +4,7 @@ A computer vision pipeline for detecting and segmenting furniture and objects in
 
 ## Overview
 
-This tool automatically identifies and labels furniture and objects in indoor scenes, making it useful for interior design analysis, room layout understanding, and spatial design studies.
+This tool automatically identifies and labels furniture and objects in indoor scenes using Florence-2 for open-vocabulary object detection combined with SAM-HQ for precise segmentation.
 
 ## Pipeline
 
@@ -14,29 +14,30 @@ The detection pipeline consists of two stages:
 2. **Segmentation (SAM-HQ)**: Creates precise pixel-level masks for each detected object
 
 ### How It Works
-
 ```
-Input Image → OWL-ViT v2 Detection → SAM-HQ Segmentation → Annotated Output + COCO JSON
+Input Image → Florence-2 Phrase Grounding → SAM-HQ Segmentation → Annotated Output + COCO JSON
 ```
 
-1. **OWL-ViT v2** scans the image and detects objects based on the configured vocabulary
-2. For each detection, a bounding box and confidence score is generated
-3. **SAM-HQ (Segment Anything Model High Quality)** refines each detection into a precise segmentation mask
+1. **Florence-2** performs phrase-grounded detection based on the configured vocabulary
+2. For each detection, a bounding box is generated
+3. **SAM-HQ** refines each detection into a precise segmentation mask
 4. Results are saved as annotated images and COCO format JSON files
 
 ## Models Used
 
-### OWL-ViT v2 (Object Detection)
-- **Model**: `google/owlv2-large-patch14-ensemble`
-- **Provider**: Google Research / Hugging Face
-- **Paper**: [Scaling Open-Vocabulary Object Detection](https://arxiv.org/abs/2306.09683)
-- **Purpose**: Open-vocabulary object detection - can detect objects based on text descriptions without being limited to predefined classes
+### Florence-2 (Object Detection)
+- **Model**: `microsoft/Florence-2-base` (or Florence-2-large)
+- **Provider**: Microsoft
+- **Paper**: [Florence-2: Advancing a Unified Representation for a Variety of Vision Tasks](https://arxiv.org/abs/2311.06242)
+- **Purpose**: Open-vocabulary object detection using phrase grounding - detects objects based on text descriptions
+- **Size**: ~230MB (base) or ~770MB (large)
+- **Note**: Florence-2 doesn't provide confidence scores but offers excellent detection quality
 
 ### SAM-HQ (Segmentation)
 - **Model**: Segment Anything Model - High Quality (ViT-L variant)
 - **Provider**: ETH Zurich VIS Group
 - **Paper**: [Segment Anything in High Quality](https://arxiv.org/abs/2306.01567)
-- **Purpose**: Generates high-quality object masks with improved boundary precision, especially for objects with intricate structures
+- **Purpose**: Generates high-quality object masks with improved boundary precision
 
 ## Features
 
@@ -166,7 +167,7 @@ See `config.py` for the complete vocabulary list.
 
 This project uses the following open-source models:
 
-- **OWL-ViT v2** by Google Research - [Paper](https://arxiv.org/abs/2306.09683) | [Model](https://huggingface.co/google/owlv2-large-patch14-ensemble)
+- **Florence-2** by Microsoft - [Paper](https://arxiv.org/abs/2311.06242) | [Model](https://huggingface.co/microsoft/Florence-2-base)
 - **Segment Anything in High Quality (SAM-HQ)**, [NeurIPS 2023] - [Paper](https://arxiv.org/abs/2306.01567) | [GitHub](https://github.com/SysCV/sam-hq.git)
 
 Special thanks to:
@@ -216,12 +217,11 @@ interior-segment-labeler/
 ## Citation
 
 If you use this tool in your research or project, please cite the original models:
-
 ```bibtex
-@article{minderer2023scaling,
-  title={Scaling Open-Vocabulary Object Detection},
-  author={Minderer, Matthias and Gritsenko, Alexey and Houlsby, Neil},
-  journal={arXiv preprint arXiv:2306.09683},
+@article{xiao2023florence,
+  title={Florence-2: Advancing a unified representation for a variety of vision tasks},
+  author={Xiao, Bin and Wu, Haiping and Xu, Weijian and Dai, Xiyang and Hu, Houdong and Lu, Yumao and Zeng, Michael and Liu, Ce and Yuan, Lu},
+  journal={arXiv preprint arXiv:2311.06242},
   year={2023}
 }
 
