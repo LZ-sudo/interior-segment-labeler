@@ -6,7 +6,7 @@ Detect and segment objects in images.
 import torch
 import numpy as np
 from pathlib import Path
-from segment_anything import sam_model_registry, SamPredictor
+from segment_anything_hq import sam_model_registry, SamPredictor
 from transformers import Owlv2Processor, Owlv2ForObjectDetection
 from PIL import Image
 import config
@@ -25,17 +25,34 @@ class InteriorDetector:
 
         sam_checkpoint = models_dir / config.MODEL_CONFIG['sam_checkpoint']
 
-        # Download SAM if needed
+        # Download SAM-HQ if needed
         if not sam_checkpoint.exists():
-            print("Downloading SAM model (vit_b)...")
+            model_type = config.MODEL_CONFIG['sam_model_type']
+            print(f"Downloading SAM-HQ model ({model_type})...")
             import urllib.request
-            url = 'https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth'
+            
+            # SAM-HQ checkpoint URLs
+            sam_hq_urls = {
+                'vit_b': 'https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_b.pth',
+                'vit_l': 'https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_l.pth',
+                'vit_h': 'https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_h.pth',
+                'vit_tiny': 'https://huggingface.co/lkeab/hq-sam/resolve/main/sam_hq_vit_tiny.pth'
+            }
+            
+            url = sam_hq_urls.get(model_type)
+            if url is None:
+                raise ValueError(f"Unknown model type: {model_type}")
+            
             urllib.request.urlretrieve(url, sam_checkpoint)
+            print(f"✓ Downloaded SAM-HQ {model_type} checkpoint")
 
-        # Load SAM
-        sam = sam_model_registry['vit_b'](checkpoint=str(sam_checkpoint))
+        # Load SAM-HQ
+        sam = sam_model_registry[config.MODEL_CONFIG['sam_model_type']](
+            checkpoint=str(sam_checkpoint)
+        )
         sam.to(config.MODEL_CONFIG['device'])
         self.sam_predictor = SamPredictor(sam)
+        print("✓ SAM-HQ loaded")
 
         # Load OWL-ViT v2 for object detection
         try:

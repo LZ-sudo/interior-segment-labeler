@@ -38,8 +38,8 @@ VOCABULARY = [
 
 # Model settings - using lightest model (vit_b)
 MODEL_CONFIG = {
-    'sam_checkpoint': 'sam_vit_b_01ec64.pth',
-    'sam_model_type': 'vit_b',
+    'sam_checkpoint': 'sam_hq_vit_b.pth',
+    'sam_model_type': 'vit_l',
     'device': 'cuda',  # Change to 'cpu' if no GPU
     'box_threshold': 0.3,  # Minimum confidence
     'text_threshold': 0.25

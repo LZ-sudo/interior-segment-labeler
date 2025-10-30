@@ -11,17 +11,17 @@ This tool automatically identifies and labels furniture and objects in indoor sc
 The detection pipeline consists of two stages:
 
 1. **Object Detection (OWL-ViT v2)**: Identifies furniture and objects in the image using open-vocabulary object detection
-2. **Segmentation (SAM)**: Creates precise pixel-level masks for each detected object
+2. **Segmentation (SAM-HQ)**: Creates precise pixel-level masks for each detected object
 
 ### How It Works
 
 ```
-Input Image → OWL-ViT v2 Detection → SAM Segmentation → Annotated Output + COCO JSON
+Input Image → OWL-ViT v2 Detection → SAM-HQ Segmentation → Annotated Output + COCO JSON
 ```
 
 1. **OWL-ViT v2** scans the image and detects objects based on the configured vocabulary
 2. For each detection, a bounding box and confidence score is generated
-3. **SAM (Segment Anything Model)** refines each detection into a precise segmentation mask
+3. **SAM-HQ (Segment Anything Model High Quality)** refines each detection into a precise segmentation mask
 4. Results are saved as annotated images and COCO format JSON files
 
 ## Models Used
@@ -32,11 +32,11 @@ Input Image → OWL-ViT v2 Detection → SAM Segmentation → Annotated Output +
 - **Paper**: [Scaling Open-Vocabulary Object Detection](https://arxiv.org/abs/2306.09683)
 - **Purpose**: Open-vocabulary object detection - can detect objects based on text descriptions without being limited to predefined classes
 
-### SAM (Segmentation)
-- **Model**: Segment Anything Model (SAM) - ViT-B variant
-- **Provider**: Meta AI Research
-- **Paper**: [Segment Anything](https://arxiv.org/abs/2304.02643)
-- **Purpose**: Generates high-quality object masks from bounding box prompts
+### SAM-HQ (Segmentation)
+- **Model**: Segment Anything Model - High Quality (ViT-L variant)
+- **Provider**: ETH Zurich VIS Group
+- **Paper**: [Segment Anything in High Quality](https://arxiv.org/abs/2306.01567)
+- **Purpose**: Generates high-quality object masks with improved boundary precision, especially for objects with intricate structures
 
 ## Features
 
@@ -78,7 +78,7 @@ pip install torch torchvision --index-url https://download.pytorch.org/whl/cu124
 ### First Run
 
 On the first run, the models will be automatically downloaded:
-- SAM weights (~375MB) will download to `models/`
+- SAM-HQ weights (~375MB) will download to `models/`
 - OWL-ViT v2 weights (~1.5GB) will be cached by Hugging Face
 
 ## Usage
@@ -143,7 +143,7 @@ All outputs are saved to the `results/` directory (or custom directory specified
 - **GPU Acceleration**: Use CUDA-enabled PyTorch for 5-10x faster processing
 - **Batch Processing**: Process directories instead of individual images to amortize model loading time
 - **Threshold Tuning**: Lower `box_threshold` to detect more objects, raise it to reduce false positives
-- **SAM Model**: The default ViT-B model provides good balance of speed and quality. For better edge precision (at the cost of speed), you can switch to ViT-L or ViT-H in `config.py`
+- **SAM-HQ Model**: The default ViT-B model provides good balance of speed and quality. For better edge precision (at the cost of speed), you can switch to ViT-L or ViT-H in `config.py`
 
 ## Detected Object Types
 
@@ -167,7 +167,7 @@ See `config.py` for the complete vocabulary list.
 This project uses the following open-source models:
 
 - **OWL-ViT v2** by Google Research - [Paper](https://arxiv.org/abs/2306.09683) | [Model](https://huggingface.co/google/owlv2-large-patch14-ensemble)
-- **Segment Anything (SAM)** by Meta AI Research - [Paper](https://arxiv.org/abs/2304.02643) | [GitHub](https://github.com/facebookresearch/segment-anything)
+- **Segment Anything in High Quality (SAM-HQ)**, [NeurIPS 2023] - [Paper](https://arxiv.org/abs/2306.01567) | [GitHub](https://github.com/SysCV/sam-hq.git)
 
 Special thanks to:
 - Hugging Face for hosting the OWL-ViT v2 model and transformers library
@@ -178,7 +178,7 @@ Special thanks to:
 
 This project uses models with the following licenses:
 - OWL-ViT v2: Apache 2.0
-- SAM: Apache 2.0
+- SAM-HQ: Apache 2.0
 
 Please refer to the respective model repositories for detailed license information.
 
@@ -191,7 +191,7 @@ Please refer to the respective model repositories for detailed license informati
 **Out of memory errors**:
 - Switch to CPU mode
 - Process images one at a time instead of batches
-- Use a smaller SAM model (vit_b is already the smallest)
+- Use a smaller SAM-HQ model
 
 **Poor detection results**:
 - Lower the `box_threshold` in `config.py` (try 0.2 or 0.15)
@@ -225,10 +225,10 @@ If you use this tool in your research or project, please cite the original model
   year={2023}
 }
 
-@article{kirillov2023segment,
-  title={Segment Anything},
-  author={Kirillov, Alexander and Mintun, Eric and Ravi, Nikhila and Mao, Hanzi and Rolland, Chloe and Gustafson, Laura and Xiao, Tete and Whitehead, Spencer and Berg, Alexander C. and Lo, Wan-Yen and Doll{\'a}r, Piotr and Girshick, Ross},
-  journal={arXiv preprint arXiv:2304.02643},
-  year={2023}
-}
+@inproceedings{sam_hq,
+    title={Segment Anything in High Quality},
+    author={Ke, Lei and Ye, Mingqiao and Danelljan, Martin and Liu, Yifan and Tai, Yu-Wing and Tang, Chi-Keung and Yu, Fisher},
+    booktitle={NeurIPS},
+    year={2023}
+}  
 ```
