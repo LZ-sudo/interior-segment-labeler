@@ -36,13 +36,14 @@ VOCABULARY = [
     'door', 'window', 'wall', 'pillow', 'cushion', 'dustbin'
 ]
 
-# Model settings - using lightest model (vit_b)
+# Model settings - Florence-2 configuration
 MODEL_CONFIG = {
     'sam_checkpoint': 'sam_hq_vit_b.pth',
     'sam_model_type': 'vit_l',
+    'florence_model': 'microsoft/Florence-2-large',  # or 'microsoft/Florence-2-large'
     'device': 'cuda',  # Change to 'cpu' if no GPU
-    'box_threshold': 0.3,  # Minimum confidence
-    'text_threshold': 0.25
+    'max_new_tokens': 1024,  # Maximum tokens for Florence-2 generation
+    'num_beams': 3  # Beam search parameter for better results
 }
 
 # Visualization settings
