@@ -67,6 +67,40 @@ def draw_boxes(image, detections):
     
     return img
 
+def expand_boxes(bbox, expansion_factor=0.10, image_shape=None):
+    """
+    Expand bounding box by a percentage while keeping it centered.
+    
+    Args:
+        bbox: [x1, y1, x2, y2]
+        expansion_factor: Percentage to expand (0.10 = 10%)
+        image_shape: (height, width) to clip boxes to image bounds
+    """
+    x1, y1, x2, y2 = bbox
+    
+    # Calculate current dimensions
+    width = x2 - x1
+    height = y2 - y1
+    
+    # Calculate expansion amounts
+    expand_w = width * expansion_factor
+    expand_h = height * expansion_factor
+    
+    # Expand symmetrically
+    new_x1 = x1 - expand_w / 2
+    new_y1 = y1 - expand_h / 2
+    new_x2 = x2 + expand_w / 2
+    new_y2 = y2 + expand_h / 2
+    
+    # Clip to image boundaries if provided
+    if image_shape is not None:
+        height_img, width_img = image_shape
+        new_x1 = max(0, new_x1)
+        new_y1 = max(0, new_y1)
+        new_x2 = min(width_img, new_x2)
+        new_y2 = min(height_img, new_y2)
+    
+    return [new_x1, new_y1, new_x2, new_y2]
 
 def _draw_masks(image, detections, colors):
     """

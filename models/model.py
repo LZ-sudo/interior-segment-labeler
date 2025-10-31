@@ -11,6 +11,7 @@ from transformers import AutoProcessor, AutoModelForCausalLM
 from PIL import Image
 import config
 import re
+from visualization import expand_boxes
 
 
 class InteriorDetector:
@@ -221,8 +222,11 @@ class InteriorDetector:
         for det in detections:
             bbox = det['bbox']
             
+            expanded_bbox = expand_boxes(bbox, expansion_factor=0.125, 
+                                   image_shape=image.shape[:2])
+
             # Convert to numpy array [x1, y1, x2, y2]
-            input_box = np.array(bbox)
+            input_box = np.array(expanded_bbox)
             
             # Predict mask
             masks, scores, logits = self.sam_predictor.predict(
