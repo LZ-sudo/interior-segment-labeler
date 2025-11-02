@@ -6,7 +6,7 @@ Export detections to COCO JSON format.
 import json
 import datetime
 from pathlib import Path
-
+from utils import generate_label_colors
 
 def export_coco(detections, image_path, image_shape, output_path):
     """
@@ -21,8 +21,9 @@ def export_coco(detections, image_path, image_shape, output_path):
     height, width = image_shape
     image_path = Path(image_path)
     
-    # Get unique labels
+    # Get unique labels and generate colors
     unique_labels = sorted(list(set(det['label'] for det in detections)))
+    label_colors = generate_label_colors(unique_labels)
     
     # Create COCO structure
     coco_data = {
@@ -48,10 +49,13 @@ def export_coco(detections, image_path, image_shape, output_path):
     # Create label to ID mapping
     label_to_id = {label: i+1 for i, label in enumerate(unique_labels)}
     
-    # Add annotations
+    # Add annotations with color names
     for ann_id, det in enumerate(detections, start=1):
         x1, y1, x2, y2 = det['bbox']
         bbox_coco = [float(x1), float(y1), float(x2-x1), float(y2-y1)]
+        
+        # Get color info for this label
+        color_info = label_colors[det['label']]
         
         annotation = {
             'id': ann_id,
@@ -59,7 +63,9 @@ def export_coco(detections, image_path, image_shape, output_path):
             'category_id': label_to_id[det['label']],
             'bbox': bbox_coco,
             'area': float((x2-x1) * (y2-y1)),
-            'iscrowd': 0
+            'iscrowd': 0,
+            'color': color_info['name'],  # Color name like "red", "steelblue"
+            'color_rgb': color_info['rgb']  # Optional: keep RGB too
         }
         
         coco_data['annotations'].append(annotation)

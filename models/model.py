@@ -60,7 +60,7 @@ class InteriorDetector:
         try:
             print("Loading Florence-2 model...")
             self.device = config.MODEL_CONFIG['device']
-            self.torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+            self.dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
             self.processor = AutoProcessor.from_pretrained(
                 config.MODEL_CONFIG['florence_model'],
@@ -68,7 +68,7 @@ class InteriorDetector:
             )
             self.model = AutoModelForCausalLM.from_pretrained(
                 config.MODEL_CONFIG['florence_model'],
-                torch_dtype=self.torch_dtype,
+                dtype=self.dtype,
                 trust_remote_code=True,
                 attn_implementation="eager"  # Fix SDPA compatibility warning
             ).to(self.device)
@@ -137,7 +137,7 @@ class InteriorDetector:
 
         # Move inputs to device and convert to correct dtype
         inputs = {
-            k: v.to(self.device).to(self.torch_dtype) if v.dtype == torch.float32 else v.to(self.device)
+            k: v.to(self.device).to(self.dtype) if v.dtype == torch.float32 else v.to(self.device)
             for k, v in inputs.items()
         }
 

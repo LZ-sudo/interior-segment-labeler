@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 import config
+from utils import generate_label_colors
 
 
 def draw_boxes(image, detections):
@@ -22,14 +23,9 @@ def draw_boxes(image, detections):
     """
     img = image.copy()
     
-    # Generate colors for each label
-    unique_labels = list(set(det['label'] for det in detections))
-    colors = {}
-    for i, label in enumerate(unique_labels):
-        # Generate distinct colors
-        hue = (i * 137.5) % 360  # Golden angle
-        color = _hsv_to_rgb(hue, 0.8, 0.9)
-        colors[label] = color
+    # Generate colors using shared function
+    unique_labels = sorted(list(set(det['label'] for det in detections)))
+    colors = generate_label_colors(unique_labels)
     
     # Draw masks first (so boxes appear on top)
     if config.VIZ_CONFIG.get('show_masks', True):
@@ -40,10 +36,10 @@ def draw_boxes(image, detections):
         x1, y1, x2, y2 = [int(v) for v in det['bbox']]
         label = det['label']
         confidence = det.get('confidence', 1.0)
-        color = colors[label]
+        color_rgb = colors[label]['rgb']  # Extract RGB tuple
         
         # Draw rectangle
-        cv2.rectangle(img, (x1, y1), (x2, y2), color, 
+        cv2.rectangle(img, (x1, y1), (x2, y2), color_rgb, 
                      config.VIZ_CONFIG['box_thickness'])
         
         # Draw label
@@ -57,7 +53,7 @@ def draw_boxes(image, detections):
             text, cv2.FONT_HERSHEY_SIMPLEX, 
             config.VIZ_CONFIG['font_scale'], 1
         )
-        cv2.rectangle(img, (x1, y1-th-5), (x1+tw+5, y1), color, -1)
+        cv2.rectangle(img, (x1, y1-th-5), (x1+tw+5, y1), color_rgb, -1)
         
         # Label text
         cv2.putText(img, text, (x1+2, y1-2), 
@@ -105,29 +101,22 @@ def expand_boxes(bbox, expansion_factor=0.10, image_shape=None):
 def _draw_masks(image, detections, colors):
     """
     Draw semi-transparent segmentation masks on image.
-    
-    Args:
-        image: RGB image (numpy array)
-        detections: List of detections with 'mask' field
-        colors: Dict mapping labels to RGB colors
-        
-    Returns:
-        Image with masks overlaid
     """
-    # Create overlay for all masks
     overlay = image.copy()
     
     for det in detections:
         if 'mask' not in det:
             continue
-            
-        mask = det['mask']  # Binary mask (H, W)
+
+        mask = det['mask']
+        # Convert mask to boolean if it's not already
+        mask = mask.astype(bool)
         label = det['label']
-        color = colors[label]
-        
+        color_rgb = colors[label]['rgb']  # Extract RGB tuple
+
         # Apply color to masked regions
         overlay[mask] = overlay[mask] * (1 - config.VIZ_CONFIG['mask_opacity']) + \
-                        np.array(color) * config.VIZ_CONFIG['mask_opacity']
+                        np.array(color_rgb) * config.VIZ_CONFIG['mask_opacity']
     
     return overlay.astype(np.uint8)
 
