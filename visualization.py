@@ -5,7 +5,6 @@ Draw bounding boxes and create comparison views.
 
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 import config
 from utils import generate_label_colors
 

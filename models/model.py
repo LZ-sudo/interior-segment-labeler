@@ -10,7 +10,6 @@ from segment_anything_hq import sam_model_registry, SamPredictor
 from transformers import AutoProcessor, AutoModelForCausalLM
 from PIL import Image
 import config
-import re
 from visualization import expand_boxes
 import urllib.request
 
@@ -22,8 +21,9 @@ class InteriorDetector:
         """Initialize models."""
         print("Loading models...")
 
-        # Paths
-        models_dir = Path('models')
+        # Paths - use absolute path relative to this file's location
+        # This ensures weights are stored in the submodule's directory even when used as a submodule
+        models_dir = Path(__file__).parent
         models_dir.mkdir(exist_ok=True)
 
         sam_checkpoint = models_dir / config.MODEL_CONFIG['sam_checkpoint']
@@ -239,10 +239,3 @@ class InteriorDetector:
         
         print(f"✓ Generated {len(detections)} segmentation masks")
         return detections
-
-    # def _dummy_detect(self, image, vocabulary):
-    #     """
-    #     Dummy detection for testing without Florence-2.
-    #     Returns empty list.
-    #     """
-    #     return []
