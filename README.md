@@ -86,17 +86,17 @@ On the first run, the models will be automatically downloaded:
 
 ### Process a Single Image
 ```bash
-python main.py path/to/image.jpg
+python segment_image.py path/to/image.jpg
 ```
 
 ### Process a Directory
 ```bash
-python main.py path/to/images/
+python segment_image.py path/to/images/
 ```
 
 ### Custom Output Directory
 ```bash
-python main.py images/ --output custom_results/
+python segment_image.py images/ --output custom_results/
 ```
 
 ## Configuration
@@ -133,9 +133,7 @@ VIZ_CONFIG = {
 
 For each processed image, the pipeline generates:
 
-1. **`*_annotated.jpg`**: Image with bounding boxes and labels
-2. **`*_comparison.jpg`**: Side-by-side comparison of original and annotated
-3. **`*_coco.json`**: Detection results in COCO format
+1. **`*_annotated.jpg`**: Image with bounding boxes and labels (disabled visually) and SAM-HQ masks
 
 All outputs are saved to the `results/` directory (or custom directory specified with `--output`).
 
@@ -143,7 +141,6 @@ All outputs are saved to the `results/` directory (or custom directory specified
 
 - **GPU Acceleration**: Use CUDA-enabled PyTorch for 5-10x faster processing
 - **Batch Processing**: Process directories instead of individual images to amortize model loading time
-- **Threshold Tuning**: Lower `box_threshold` to detect more objects, raise it to reduce false positives
 - **SAM-HQ Model**: The default ViT-B model provides good balance of speed and quality. For better edge precision (at the cost of speed), you can switch to ViT-L or ViT-H in `config.py`
 
 ## Detected Object Types
@@ -195,7 +192,6 @@ Please refer to the respective model repositories for detailed license informati
 - Use a smaller SAM-HQ model
 
 **Poor detection results**:
-- Lower the `box_threshold` in `config.py` (try 0.2 or 0.15)
 - Add more specific object descriptions to `VOCABULARY`
 - Ensure images are well-lit and objects are clearly visible
 
@@ -204,11 +200,10 @@ Please refer to the respective model repositories for detailed license informati
 ```
 interior-segment-labeler/
 ├── config.py              # Configuration and vocabulary
-├── main.py                # Main entry point
+├── segment_image.py       # Main entry point
 ├── models/
 │   └── model.py          # Model loading and inference
 ├── visualization.py       # Image annotation utilities
-├── export_coco.py        # COCO format export
 ├── utils.py              # Helper functions
 ├── requirements.txt      # Python dependencies
 └── README.md            # This file

@@ -12,8 +12,8 @@ Usage:
 import sys
 from pathlib import Path
 from models.model import InteriorDetector
-from visualization import draw_boxes, create_comparison
-from export_coco import export_coco
+from visualization import draw_boxes
+# from export_coco import export_coco
 from utils import load_image, save_image, load_prompts
 import config
 
@@ -60,13 +60,13 @@ def process_image(image_path, detector, output_dir='results'):
         annotated_path = output_dir / f"{image_path.stem}_annotated.jpg"
         save_image(annotated, annotated_path)
         
-        # Create comparison
-        comparison_path = output_dir / f"{image_path.stem}_comparison.jpg"
-        create_comparison(image, annotated, comparison_path)
+        # # Create comparison
+        # comparison_path = output_dir / f"{image_path.stem}_comparison.jpg"
+        # create_comparison(image, annotated, comparison_path)
         
-        # 5. Export COCO
-        coco_path = output_dir / f"{image_path.stem}_coco.json"
-        export_coco(detections, image_path, image.shape[:2], coco_path)
+        # # 5. Export COCO
+        # coco_path = output_dir / f"{image_path.stem}_coco.json"
+        # export_coco(detections, image_path, image.shape[:2], coco_path)
         
         return True
         

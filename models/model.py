@@ -12,6 +12,7 @@ from PIL import Image
 import config
 import re
 from visualization import expand_boxes
+import urllib.request
 
 
 class InteriorDetector:
@@ -31,7 +32,6 @@ class InteriorDetector:
         if not sam_checkpoint.exists():
             model_type = config.MODEL_CONFIG['sam_model_type']
             print(f"Downloading SAM-HQ model ({model_type})...")
-            import urllib.request
             
             # SAM-HQ checkpoint URLs
             sam_hq_urls = {
