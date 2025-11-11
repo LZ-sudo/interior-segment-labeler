@@ -48,32 +48,54 @@ class InteriorDetector:
             urllib.request.urlretrieve(url, sam_checkpoint)
             print(f"✓ Downloaded SAM-HQ {model_type} checkpoint")
 
-        # Load SAM-HQ
-        sam = sam_model_registry[config.MODEL_CONFIG['sam_model_type']](
-            checkpoint=str(sam_checkpoint)
-        )
-        sam.to(config.MODEL_CONFIG['device'])
+        # Load SAM-HQ with proper device mapping
+        # Determine device for loading
+        device = config.MODEL_CONFIG['device']
+
+        # Build model architecture first (without loading checkpoint)
+        sam = sam_model_registry[config.MODEL_CONFIG['sam_model_type']](checkpoint=None)
+
+        # Load checkpoint with proper map_location to handle CUDA/CPU compatibility
+        if device == 'cpu':
+            # If running on CPU, map CUDA tensors to CPU
+            checkpoint_data = torch.load(str(sam_checkpoint), map_location='cpu')
+        else:
+            # If running on CUDA, load normally
+            checkpoint_data = torch.load(str(sam_checkpoint))
+
+        # Load state dict into model
+        sam.load_state_dict(checkpoint_data)
+
+        # Move model to target device
+        sam.to(device)
         self.sam_predictor = SamPredictor(sam)
-        print("✓ SAM-HQ loaded")
+        print(f"[OK] SAM-HQ loaded on {device}")
 
         # Load Florence-2 for object detection
         try:
             print("Loading Florence-2 model...")
-            self.device = config.MODEL_CONFIG['device']
+            self.device = device  # Use the same device as SAM
             self.dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
             self.processor = AutoProcessor.from_pretrained(
                 config.MODEL_CONFIG['florence_model'],
                 trust_remote_code=True
             )
+
+            # Load model with device mapping for CPU/CUDA compatibility
             self.model = AutoModelForCausalLM.from_pretrained(
                 config.MODEL_CONFIG['florence_model'],
-                dtype=self.dtype,
+                torch_dtype=self.dtype,
                 trust_remote_code=True,
+                device_map=self.device if self.device == 'cuda' else None,  # Auto device mapping for CUDA
                 attn_implementation="eager"  # Fix SDPA compatibility warning
-            ).to(self.device)
+            )
 
-            print("✓ Florence-2 loaded successfully")
+            # Move to device if not using device_map
+            if self.device == 'cpu':
+                self.model = self.model.to(self.device)
+
+            print(f"[OK] Florence-2 loaded on {self.device}")
         except Exception as e:
             self.processor = None
             self.model = None

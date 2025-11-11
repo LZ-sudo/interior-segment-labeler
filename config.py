@@ -3,6 +3,16 @@ Simple Configuration
 Basic vocabulary and settings for interior detection.
 """
 
+import torch
+
+# Auto-detect CUDA availability
+def _get_device():
+    """Auto-detect best available device (CUDA > CPU)"""
+    if torch.cuda.is_available():
+        return 'cuda'
+    else:
+        return 'cpu'
+
 # Interior vocabulary - common furniture and objects (used in absence of prompts) 
 VOCABULARY = [
     # Seating
@@ -41,10 +51,13 @@ MODEL_CONFIG = {
     'sam_checkpoint': 'sam_hq_vit_b.pth',
     'sam_model_type': 'vit_l',
     'florence_model': 'microsoft/Florence-2-large',  # or 'microsoft/Florence-2-large'
-    'device': 'cuda',  # Change to 'cpu' if no GPU
+    'device': _get_device(),  # Auto-detect: CUDA if available, else CPU
     'max_new_tokens': 1024,  # Maximum tokens for Florence-2 generation
     'num_beams': 3  # Beam search parameter for better results
 }
+
+# Print device info on import
+print(f"[Interior Segmenter] Using device: {MODEL_CONFIG['device']}")
 
 # Visualization settings
 VIZ_CONFIG = {
