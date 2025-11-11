@@ -4,9 +4,9 @@ Main Script
 Simple interface to detect objects in interior images.
 
 Usage:
-    python main.py image.jpg              # Single image
-    python main.py images/                # Directory
-    python main.py images/ --output results/
+    python segment_image.py image.jpg              # Single image
+    python segment_image.py images/                # Directory
+    python segment_image.py images/ --output results/
 """
 
 import sys
@@ -137,13 +137,13 @@ def main():
     """Main entry point."""
     if len(sys.argv) < 2:
         print("Usage:")
-        print("  python main.py <image_path>           # Single image")
-        print("  python main.py <directory>            # All images in directory")
-        print("  python main.py <path> --output <dir>  # Custom output directory")
+        print("  python segment_image.py <image_path>           # Single image")
+        print("  python segment_image.py <directory>            # All images in directory")
+        print("  python segment_image.py <path> --output <dir>  # Custom output directory")
         print("\nExamples:")
-        print("  python main.py room.jpg")
-        print("  python main.py images/")
-        print("  python main.py images/ --output my_results/")
+        print("  python segment_image.py room.jpg")
+        print("  python segment_image.py images/")
+        print("  python segment_image.py images/ --output my_results/")
         sys.exit(1)
     
     input_path = Path(sys.argv[1])
