@@ -82,18 +82,17 @@ class InteriorDetector:
                 trust_remote_code=True
             )
 
-            # Load model with device mapping for CPU/CUDA compatibility
+            # Load model with proper device handling
+            # Don't use device_map - it requires accelerate library
             self.model = AutoModelForCausalLM.from_pretrained(
                 config.MODEL_CONFIG['florence_model'],
-                torch_dtype=self.dtype,
+                dtype=self.dtype, 
                 trust_remote_code=True,
-                device_map=self.device if self.device == 'cuda' else None,  # Auto device mapping for CUDA
                 attn_implementation="eager"  # Fix SDPA compatibility warning
             )
 
-            # Move to device if not using device_map
-            if self.device == 'cpu':
-                self.model = self.model.to(self.device)
+            # Move model to device explicitly
+            self.model = self.model.to(self.device)
 
             print(f"[OK] Florence-2 loaded on {self.device}")
         except Exception as e:
@@ -123,13 +122,15 @@ class InteriorDetector:
         image_np = np.array(image_pil)
         
         print(f"Detecting: {len(vocabulary)} object types...")
-        
-        # Use Florence-2 if available, otherwise use dummy detections
+
+        # Use Florence-2 if available, otherwise return empty
         if self.model is not None:
             detections = self._detect_with_florence2(image_pil, vocabulary)
         else:
             print("Error: Florence-2 not loaded")
-        
+            detections = []
+            return detections
+
         print(f"Found: {len(detections)} objects")
         
         # Generate SAM masks for each detection
