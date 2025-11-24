@@ -47,17 +47,17 @@ def load_prompts(image_path):
         prompts = data.get('prompts', [])
         
         if not prompts:
-            print(f"  ⚠ Warning: {prompt_file.name} has no prompts")
+            print(f"  [!] Warning: {prompt_file.name} has no prompts")
             return None
-            
-        print(f"  ✓ Loaded {len(prompts)} custom prompts from {prompt_file.name}")
+
+        print(f"  [OK] Loaded {len(prompts)} custom prompts from {prompt_file.name}")
         return prompts
-        
+
     except json.JSONDecodeError as e:
-        print(f"  ✗ Error reading {prompt_file.name}: {e}")
+        print(f"  [ERROR] Error reading {prompt_file.name}: {e}")
         return None
     except Exception as e:
-        print(f"  ✗ Unexpected error loading prompts: {e}")
+        print(f"  [ERROR] Unexpected error loading prompts: {e}")
         return None
 
 # Colour generation functions

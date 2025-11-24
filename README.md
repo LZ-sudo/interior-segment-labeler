@@ -84,20 +84,86 @@ On the first run, the models will be automatically downloaded:
 
 ## Usage
 
-### Process a Single Image
+### Two Scripts Available
+
+This package provides two scripts:
+1. **`segment_image.py`** - Full detection + segmentation pipeline (Florence-2 + SAM-HQ)
+2. **`label_changes.py`** - Detection only (Florence-2), outputs JSON coordinates for frontend use
+
+### segment_image.py - Full Pipeline
+
+Process images with detection and segmentation:
+
 ```bash
+# Process a single image
 python segment_image.py path/to/image.jpg
-```
 
-### Process a Directory
-```bash
+# Process a directory
 python segment_image.py path/to/images/
-```
 
-### Custom Output Directory
-```bash
+# Custom output directory
 python segment_image.py images/ --output custom_results/
 ```
+
+### label_changes.py - Detection API (NEW)
+
+Get bounding box coordinates for frontend visualization with automatic JSON and image outputs:
+
+```bash
+# Basic usage - auto-generates JSON + labeled image
+python label_changes.py room.jpg
+
+# With custom vocabulary
+python label_changes.py room.jpg "sofa, coffee table, lamp"
+
+# Save to custom directory
+python label_changes.py room.jpg --output-dir results/
+
+# Skip image generation (JSON only)
+python label_changes.py room.jpg --no-image
+
+# Print to console only (no files)
+python label_changes.py room.jpg --no-json --no-image
+
+# Get pixel coordinates instead of normalized
+python label_changes.py room.jpg --format pixels
+
+# Disable automatic filtering (keep all detections including duplicates)
+python label_changes.py room.jpg --no-filter
+```
+
+**Automatic Detection Filtering:**
+
+By default, `label_changes.py` automatically cleans up detections to:
+- ✅ Remove action verbs (e.g., "Install", "Add", "Remove") that aren't actual objects
+- ✅ Remove duplicate overlapping detections (keeps most descriptive label)
+- ✅ Use `--no-filter` to disable this behavior
+- ✅ Adjust overlap threshold with `--iou-threshold 0.7` (default)
+
+**Default Output Files:**
+- `{image_stem}_detections.json` - Bounding box coordinates (normalized by default)
+- `{image_stem}_labeled.jpg` - Annotated image with colored bounding boxes and labels
+
+**Vocabulary Priority:**
+1. JSON prompt file (`{image_stem}_prompt.json`) - if exists
+2. Command-line vocabulary argument - if provided
+3. Default vocabulary from `config.py` - fallback
+
+**Creating a Prompt JSON File:**
+For an image named `room.jpg`, create `room_prompt.json`:
+```json
+{
+  "prompts": ["sofa", "coffee table", "lamp", "chair"]
+}
+```
+
+**Why use `label_changes.py`?**
+- ✅ Faster (skips SAM segmentation)
+- ✅ Lower memory usage (only Florence-2)
+- ✅ Auto-generates JSON + visual output
+- ✅ Normalized coordinates (perfect for web frontends)
+- ✅ Easy integration with React, Canvas, HTML overlays
+- ✅ Same JSON prompt workflow as `segment_image.py`
 
 ## Configuration
 
@@ -131,11 +197,91 @@ VIZ_CONFIG = {
 
 ## Output
 
+### segment_image.py Output
+
 For each processed image, the pipeline generates:
 
 1. **`*_annotated.jpg`**: Image with bounding boxes and labels (disabled visually) and SAM-HQ masks
 
 All outputs are saved to the `results/` directory (or custom directory specified with `--output`).
+
+### label_changes.py Output
+
+Returns JSON with bounding box coordinates. Example output:
+
+**Normalized Format (Default - Recommended for Frontend):**
+```json
+{
+  "image_path": "room.jpg",
+  "image_size": {"width": 1920, "height": 1080},
+  "vocabulary": ["sofa", "table", "lamp"],
+  "detections": [
+    {
+      "label": "sofa",
+      "confidence": 1.0,
+      "bbox": [0.125, 0.342, 0.487, 0.856],
+      "center": [0.306, 0.599],
+      "width": 0.362,
+      "height": 0.514
+    }
+  ],
+  "count": 1,
+  "coordinate_format": "normalized"
+}
+```
+
+**Coordinate Systems:**
+- **Normalized** (0-1 range): Resolution-independent, perfect for responsive web frontends
+- **Pixels** (absolute): Direct pixel coordinates relative to original image size
+- **Both**: Includes both formats for maximum flexibility
+
+### Frontend Integration Example
+
+**JavaScript/Canvas:**
+```javascript
+// Load detections
+const detections = await fetch('detections.json').then(r => r.json());
+
+// Draw on canvas
+function drawBoxes(canvas, image, detections) {
+  const ctx = canvas.getContext('2d');
+  detections.detections.forEach(det => {
+    const [x1, y1, x2, y2] = det.bbox;
+    // Convert normalized to pixels
+    const x = x1 * image.width;
+    const y = y1 * image.height;
+    const w = (x2 - x1) * image.width;
+    const h = (y2 - y1) * image.height;
+
+    ctx.strokeStyle = 'red';
+    ctx.strokeRect(x, y, w, h);
+  });
+}
+```
+
+**React/HTML Overlay:**
+```jsx
+function BoundingBoxOverlay({ detections }) {
+  return detections.detections.map((det, i) => {
+    const [x1, y1, x2, y2] = det.bbox;
+    return (
+      <div key={i} style={{
+        position: 'absolute',
+        left: `${x1 * 100}%`,
+        top: `${y1 * 100}%`,
+        width: `${(x2 - x1) * 100}%`,
+        height: `${(y2 - y1) * 100}%`,
+        border: '3px solid red',
+        pointerEvents: 'none'
+      }}>
+        <span style={{color: 'red', fontWeight: 'bold'}}>
+          {det.label}
+        </span>
+      </div>
+    );
+  });
+}
+```
 
 ## Performance Tips
 
@@ -200,7 +346,8 @@ Please refer to the respective model repositories for detailed license informati
 ```
 interior-segment-labeler/
 ├── config.py              # Configuration and vocabulary
-├── segment_image.py       # Main entry point
+├── segment_image.py       # Full pipeline (detection + segmentation)
+├── label_changes.py       # Detection-only API (NEW)
 ├── models/
 │   └── model.py          # Model loading and inference
 ├── visualization.py       # Image annotation utilities
@@ -208,6 +355,20 @@ interior-segment-labeler/
 ├── requirements.txt      # Python dependencies
 └── README.md            # This file
 ```
+
+## Comparison: segment_image.py vs label_changes.py
+
+| Feature | segment_image.py | label_changes.py |
+|---------|------------------|------------------|
+| **Detection** | ✅ Florence-2 | ✅ Florence-2 |
+| **Segmentation** | ✅ SAM-HQ masks | ❌ None |
+| **Image Output** | Annotated with masks | Annotated with boxes |
+| **JSON Output** | Optional | Default (detections) |
+| **Coordinates** | Pixels | Normalized + Pixels |
+| **Speed** | Slower (~5-10s/image) | Faster (~1-2s/image) |
+| **Memory** | Higher (both models) | Lower (Florence-2 only) |
+| **Use Case** | Segmentation masks | Bounding box highlights |
+| **Best For** | Research, pixel-masks | Web apps, UI overlays |
 
 ## Citation
 
