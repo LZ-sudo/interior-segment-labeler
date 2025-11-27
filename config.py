@@ -56,8 +56,8 @@ MODEL_CONFIG = {
     'num_beams': 3  # Beam search parameter for better results
 }
 
-# Print device info on import
-print(f"[Interior Segmenter] Using device: {MODEL_CONFIG['device']}")
+# Device info is printed when Florence2Detector is initialized, not on import
+# This prevents unwanted output when the module is imported in API/Modal deployments
 
 # Visualization settings
 VIZ_CONFIG = {
